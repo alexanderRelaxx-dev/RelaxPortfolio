@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>RELAXX | Sonic & Visual Architecture</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Syncopate:wght@400;700&family=JetBrains+Mono:wght@300;500&family=Orbitron:wght@400;900&display=swap');
+
+        :root {
+            --matrix-green: #00ff41;
+            --deep-black: #050505;
+        }
+
+        body {
+            background-color: var(--deep-black);
+            color: #e0e0e0;
+            font-family: 'JetBrains Mono', monospace;
+            overflow-x: hidden;
+            margin: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .font-display { font-family: 'Orbitron', sans-serif; }
+        .font-header { font-family: 'Syncopate', sans-serif; }
+
+        /* Background Video Container */
+        #bg-video-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -2;
+            overflow: hidden;
+        }
+        #bg-video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            opacity: 0.4; /* Base opacity for the video */
+        }
+
+        /* Gradient Overlay for the requested shade effect */
+        .bg-gradient-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            pointer-events: none;
+            /* Bright on top, zero opacity (black) at bottom */
+            background: linear-gradient(to bottom,
+                rgba(5, 5, 5, 0) 0%,
+                rgba(5, 5, 5, 0.5) 40%,
+                rgba(5, 5, 5, 1) 100%);
+        }
+
+        .glitch {
+            position: relative;
+            display: inline-block;
+            color: white;
+        }
+        .glitch::before, .glitch::after {
+            content: attr(data-text);
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            opacity: 0.8;
+        }
+        .glitch::before {
+            color: #ff0055;
+            z-index: -1;
+            animation: glitch-anim 0.3s infinite;
+        }
+        .glitch::after {
+            color: var(--matrix-green);
+            z-index: -2;
+            animation: glitch-anim 0.3s reverse infinite;
+        }
+        @keyframes glitch-anim {
+            0% { transform: translate(0); }
+            20% { transform: translate(-2px, 2px); }
+            40% { transform: translate(-2px, -2px); }
+            60% { transform: translate(2px, 2px); }
+            80% { transform: translate(2px, -2px); }
+            100% { transform: translate(0); }
+        }
+
+        .cyber-border {
+            border: 1px solid rgba(0, 255, 65, 0.3);
+            transition: all 0.3s ease;
+            background: rgba(0, 0, 0, 0.6);
+        }
+        .cyber-border:hover {
+            border-color: var(--matrix-green);
+            box-shadow: 0 0 15px rgba(0, 255, 65, 0.4);
+            transform: translateY(-2px);
+        }
+
+        .brutalist-btn {
+            background: var(--matrix-green);
+            color: black;
+            font-weight: 900;
+            text-transform: uppercase;
+            clip-path: polygon(10% 0, 100% 0, 100% 70%, 90% 100%, 0 100%, 0 30%);
+            transition: all 0.2s;
+        }
+        .brutalist-btn:hover {
+            background: white;
+            transform: scale(1.05);
+            box-shadow: 0 0 20px var(--matrix-green);
+        }
+
+        #video-modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.98);
+            z-index: 10000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(15px);
+            padding: 20px;
+        }
+        .modal-content {
+            position: relative;
+            width: 100%;
+            max-width: 1200px;
+            aspect-ratio: 16 / 9;
+            border: 2px solid var(--matrix-green);
+            box-shadow: 0 0 50px rgba(0, 255, 65, 0.3);
+        }
+        .close-modal {
+            position: absolute;
+            top: -50px;
+            right: 0;
+            color: var(--matrix-green);
+            font-size: 2rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            padding: 10px;
+        }
+        .close-modal:hover {
+            color: white;
+            transform: scale(1.1);
+        }
+    </style>
+</head>
+<body class="selection:bg-green-500 selection:text-black">
+
+    <!-- Background Video -->
+    <div id="bg-video-container">
+        <video id="bg-video" src="sfondo.mp4" autoplay muted loop playsinline></video>
+    </div>
+    <!-- Gradient Overlay for Fade to Black -->
+    <div class="bg-gradient-overlay"></div>
+
+    <!-- Fullscreen Video Modal -->
+    <div id="video-modal">
+        <div class="modal-content">
+            <div class="close-modal" id="close-modal">
+                <i class="fas fa-times"></i>
+            </div>
+            <video id="modal-video" controls autoplay loop class="w-full h-full object-contain"></video>
+        </div>
+    </div>
+
+    <nav class="fixed w-full z-50 px-6 py-6 flex justify-between items-center mix-blend-difference">
+        <div class="text-xl md:text-2xl font-black tracking-tighter font-display text-white">
+            RELAXX <span class="text-[10px] align-top opacity-50">[SYSTEM_CORE]</span>
+        </div>
+        <div class="flex items-center gap-6">
+            <div class="space-x-6 hidden md:flex font-medium text-xs uppercase tracking-[0.3em] text-white">
+                <a href="#music" class="hover:text-[#00ff41] transition">/SONICS</a>
+                <a href="#visuals" class="hover:text-[#00ff41] transition">/VISIONS</a>
+                <a href="#about" class="hover:text-[#00ff41] transition">/MANIFESTO</a>
+            </div>
+            <a href="https://www.instagram.com/alexander_rrrelax?stkn=MWM3MDk5MWppb2UxYg==" target="_blank" class="text-[#00ff41] hover:text-white transition">
+                <i class="fab fa-instagram text-xl"></i>
+            </a>
+        </div>
+    </nav>
+
+    <section class="relative h-screen flex items-center justify-center overflow-hidden px-4">
+        <div class="relative z-10 text-center">
+            <div class="mb-2 text-[#00ff41] text-xs tracking-[0.5em] uppercase opacity-70">S_Y_S_T_E_M_O_N_L_I_N_E</div>
+            <h1 class="text-5xl md:text-9xl font-black uppercase leading-none mb-8 font-display tracking-tighter text-white">
+                <span class="glitch" data-text="RELAXX">RELAXX</span>
+            </h1>
+            <p class="text-xs md:text-lg text-gray-400 max-w-xl mx-auto mb-12 uppercase tracking-widest font-light italic">
+                visual & sounds experiments
+            </p>
+            <div class="flex flex-col md:flex-row gap-6 justify-center items-center">
+                <a href="#music" class="brutalist-btn px-10 py-4 text-sm w-full md:w-auto text-center">Enter the Void</a>
+                <a href="https://www.instagram.com/alexander_rrrelax?stkn=MWM3MDk5MWppb2UxYg==" target="_blank" class="text-xs uppercase tracking-widest hover:text-green-400 transition flex items-center justify-center gap-2 text-gray-400 w-full md:w-auto">
+                    <i class="fab fa-instagram"></i> Neural Feed
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <section id="music" class="py-32 px-6 max-w-6xl mx-auto relative">
+        <div class="flex items-center gap-4 mb-16">
+            <span class="text-[#00ff41] font-bold">01.</span>
+            <h2 class="text-2xl md:text-3xl font-header uppercase text-white tracking-tighter">Sonic Architecture</h2>
+            <div class="h-px flex-1 bg-green-500/30"></div>
+        </div>
+        <div class="cyber-border p-1 bg-black">
+            <iframe width="100%" height="166" scrolling="no" frameborder="no" allow="autoplay"
+                src="https://w.soundcloud.com/player/?url=https%3A//soundcloud.com/radiodopo/rumore-room-con-relax-iga&color=00ff41&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true">
+            </iframe>
+        </div>
+    </section>
+
+    <section id="visuals" class="py-32 px-6 bg-black/50">
+        <div class="max-w-7xl mx-auto">
+            <div class="flex items-center gap-4 mb-16 justify-end">
+                <div class="h-px flex-1 bg-green-500/30"></div>
+                <span class="text-[#00ff41] font-bold">02.</span>
+                <h2 class="text-2xl md:text-3xl font-header uppercase text-white tracking-tighter">Visual Interface</h2>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6" id="visual-grid">
+                <!-- Videos injected by JS -->
+            </div>
+        </div>
+    </section>
+
+    <section id="about" class="py-32 px-6 max-w-4xl mx-auto">
+        <div class="cyber-border p-6 md:p-12 bg-black relative overflow-hidden">
+            <div class="absolute top-0 right-0 p-2 text-[10px] text-green-500 opacity-30 font-mono">ID: RELAXX_MANIFESTO</div>
+            <h2 class="text-2xl md:text-3xl font-header uppercase text-white mb-8 tracking-tighter">The Manifesto</h2>
+            <p class="text-gray-400 text-base md:text-lg leading-relaxed mb-12 font-light tracking-wide">
+                Sicilian DJ and visual artist. I work with TouchDesigner, Resolume, After Effects, Photoshop, Illustrator and a little bit of Blender. <br><br>
+                Ableton Live 12 + hardware & CDJs. Experience with organizing venues for parties, exhibits or shows.
+            </p>
+            <div class="flex flex-col md:flex-row items-center justify-between gap-8 border-t border-green-500/30 pt-12">
+                <div class="text-center md:text-left">
+                    <h3 class="text-xs uppercase tracking-widest text-green-500 mb-2">Direct Connection</h3>
+                    <a href="mailto:alexanderdesimone.info@gmail.com" class="text-lg md:text-xl font-display text-white hover:text-green-400 transition tracking-tighter">alexanderdesimone.info@gmail.com</a>
+                </div>
+                <div class="flex gap-4">
+                    <a href="https://www.instagram.com/alexander_rrrelax?stkn=MWM3MDk5MWppb2UxYg==" target="_blank" class="w-12 h-12 flex items-center justify-center border border-green-500/50 text-green-500 hover:bg-green-500 hover:text-black transition">
+                        <i class="fab fa-instagram"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="py-12 px-6 border-t border-green-500/20 text-center">
+        <p class="text-gray-600 text-[10px] uppercase tracking-[0.5em]">
+            &copy; 2026 RELAXX // SYSTEM_STATUS: ONLINE // ALL RIGHTS RESERVED
+        </p>
+    </footer>
+
+    <script>
+        // Modal Logic
+        const modal = document.getElementById('video-modal');
+        const modalVideo = document.getElementById('modal-video');
+        const closeModal = document.getElementById('close-modal');
+
+        function openModal(src) {
+            modalVideo.src = src;
+            modal.style.display = 'flex';
+            modalVideo.play().catch(e => console.log("Autoplay blocked"));
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeVideoModal() {
+            modal.style.display = 'none';
+            modalVideo.pause();
+            modalVideo.src = '';
+            document.body.style.overflow = 'auto';
+        }
+
+        closeModal.onclick = closeVideoModal;
+        modal.onclick = (e) => { if(e.target === modal) closeVideoModal(); };
+
+        // Video Integration
+        const videoFiles = [
+            'video5879560956912082639.mp4',
+            'video5879560956912082640.mp4',
+            'video5879560956912082641.mp4',
+            'video5879560956912082642.mp4',
+            'video5879560956912082644.mp4',
+            'video5879560956912082645.mp4',
+            'video5879560956912082646.mp4'
+        ];
+
+        const grid = document.getElementById('visual-grid');
+        videoFiles.forEach((file, index) => {
+            const div = document.createElement('div');
+            div.className = 'group relative overflow-hidden cyber-border aspect-video bg-black cursor-pointer';
+            div.innerHTML = `
+                <video src="${file}" muted loop playsinline class="w-full h-full object-cover opacity-60 group-hover:opacity-100 grayscale group-hover:grayscale-0 transition duration-500" id="vid-${index}"></video>
+                <div class="absolute top-4 left-4 px-2 py-1 bg-green-500 text-black text-[10px] font-bold uppercase">Stream_${index + 1}.exe</div>
+                <div class="absolute bottom-0 left-0 p-4 w-full bg-gradient-to-t from-black via-black/80 to-transparent">
+                    <h3 class="text-sm font-display text-white uppercase tracking-tighter">Visual_Exp_${index + 1}</h3>
+                </div>
+            `;
+            div.onclick = () => openModal(file);
+            grid.appendChild(div);
+        });
+
+        // Autoplay logic for all gallery videos
+        function attemptAutoplay() {
+            const allVideos = document.querySelectorAll('#visual-grid video');
+            allVideos.forEach(v => {
+                v.muted = true;
+                v.setAttribute('muted', '');
+                v.play().catch(err => {});
+            });
+        }
+
+        window.addEventListener('load', attemptAutoplay);
+        document.addEventListener('click', attemptAutoplay, { once: true });
+        document.addEventListener('touchstart', attemptAutoplay, { once: true });
+    </script>
+</body>
+</html>
