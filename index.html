@@ -40,7 +40,7 @@
             width: 100%;
             height: 100%;
             object-fit: cover;
-            opacity: 0.4; /* Base opacity for the video */
+            opacity: 0.4;
         }
 
         /* Gradient Overlay for the requested shade effect */
@@ -52,7 +52,6 @@
             height: 100%;
             z-index: -1;
             pointer-events: none;
-            /* Bright on top, zero opacity (black) at bottom */
             background: linear-gradient(to bottom,
                 rgba(5, 5, 5, 0) 0%,
                 rgba(5, 5, 5, 0.5) 40%,
@@ -155,7 +154,6 @@
     <div id="bg-video-container">
         <video id="bg-video" src="sfondo.mp4" autoplay muted loop playsinline></video>
     </div>
-    <!-- Gradient Overlay for Fade to Black -->
     <div class="bg-gradient-overlay"></div>
 
     <!-- Fullscreen Video Modal -->
@@ -164,7 +162,9 @@
             <div class="close-modal" id="close-modal">
                 <i class="fas fa-times"></i>
             </div>
-            <video id="modal-video" controls autoplay loop class="w-full h-full object-contain"></video>
+            <div id="modal-media-container" class="w-full h-full flex items-center justify-center">
+                <!-- Dynamic content (video or img) injected here -->
+            </div>
         </div>
     </div>
 
@@ -223,7 +223,7 @@
                 <h2 class="text-2xl md:text-3xl font-header uppercase text-white tracking-tighter">Visual Interface</h2>
             </div>
             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6" id="visual-grid">
-                <!-- Videos injected by JS -->
+                <!-- Media injected by JS -->
             </div>
         </div>
     </section>
@@ -259,28 +259,35 @@
     <script>
         // Modal Logic
         const modal = document.getElementById('video-modal');
-        const modalVideo = document.getElementById('modal-video');
+        const modalContainer = document.getElementById('modal-media-container');
         const closeModal = document.getElementById('close-modal');
 
         function openModal(src) {
-            modalVideo.src = src;
+            const isGif = src.toLowerCase().endsWith('.gif');
+
+            if (isGif) {
+                modalContainer.innerHTML = `<img src="${src}" class="max-w-full max-h-full object-contain" />`;
+            } else {
+                modalContainer.innerHTML = `<video src="${src}" controls autoplay loop class="w-full h-full object-contain"></video>`;
+            }
+
             modal.style.display = 'flex';
-            modalVideo.play().catch(e => console.log("Autoplay blocked"));
             document.body.style.overflow = 'hidden';
         }
 
         function closeVideoModal() {
             modal.style.display = 'none';
-            modalVideo.pause();
-            modalVideo.src = '';
+            modalContainer.innerHTML = '';
             document.body.style.overflow = 'auto';
         }
 
         closeModal.onclick = closeVideoModal;
         modal.onclick = (e) => { if(e.target === modal) closeVideoModal(); };
 
-        // Video Integration
-        const videoFiles = [
+        // Media Integration
+        // First item is gif1.gif, then the mp4s
+        const mediaFiles = [
+            'gif1.gif',
             'video5879560956912082639.mp4',
             'video5879560956912082640.mp4',
             'video5879560956912082641.mp4',
@@ -291,11 +298,17 @@
         ];
 
         const grid = document.getElementById('visual-grid');
-        videoFiles.forEach((file, index) => {
+        mediaFiles.forEach((file, index) => {
+            const isGif = file.toLowerCase().endsWith('.gif');
             const div = document.createElement('div');
             div.className = 'group relative overflow-hidden cyber-border aspect-video bg-black cursor-pointer';
+
+            const mediaTag = isGif
+                ? `<img src="${file}" class="w-full h-full object-cover opacity-60 group-hover:opacity-100 grayscale group-hover:grayscale-0 transition duration-500" />`
+                : `<video src="${file}" muted loop playsinline class="w-full h-full object-cover opacity-60 group-hover:opacity-100 grayscale group-hover:grayscale-0 transition duration-500" id="vid-${index}"></video>`;
+
             div.innerHTML = `
-                <video src="${file}" muted loop playsinline class="w-full h-full object-cover opacity-60 group-hover:opacity-100 grayscale group-hover:grayscale-0 transition duration-500" id="vid-${index}"></video>
+                ${mediaTag}
                 <div class="absolute top-4 left-4 px-2 py-1 bg-green-500 text-black text-[10px] font-bold uppercase">Stream_${index + 1}.exe</div>
                 <div class="absolute bottom-0 left-0 p-4 w-full bg-gradient-to-t from-black via-black/80 to-transparent">
                     <h3 class="text-sm font-display text-white uppercase tracking-tighter">Visual_Exp_${index + 1}</h3>
@@ -305,13 +318,13 @@
             grid.appendChild(div);
         });
 
-        // Autoplay logic for all gallery videos
+        // Autoplay logic for videos in gallery
         function attemptAutoplay() {
             const allVideos = document.querySelectorAll('#visual-grid video');
             allVideos.forEach(v => {
                 v.muted = true;
                 v.setAttribute('muted', '');
-                v.play().catch(err => {});
+                v.play().catch(() => {});
             });
         }
 
