@@ -39,7 +39,7 @@
             width: 100%;
             height: 100%;
             object-fit: cover;
-            opacity: 0.4;
+            opacity: 0.7;
         }
 
         .bg-gradient-overlay {
@@ -52,7 +52,8 @@
             pointer-events: none;
             background: linear-gradient(to bottom,
                 rgba(5, 5, 5, 0) 0%,
-                rgba(5, 5, 5, 0.5) 40%,
+                rgba(5, 5, 5, 0.3) 30%,
+                rgba(5, 5, 5, 0.7) 60%,
                 rgba(5, 5, 5, 1) 100%);
         }
 
@@ -149,7 +150,7 @@
 <body class="selection:bg-green-500 selection:text-black">
 
     <div id="bg-video-container">
-        <video id="bg-video" src="sfondo.mp4" autoplay muted loop playsinline></video>
+        <video id="bg-video" src="https://res.cloudinary.com/bjftepfn/video/upload/v1790203846/sfondo.mp4" autoplay muted loop playsinline></video>
     </div>
     <div class="bg-gradient-overlay"></div>
 
@@ -218,9 +219,8 @@
                 <span class="text-[#00ff41] font-bold">02.</span>
                 <h2 class="text-2xl md:text-3xl font-header uppercase text-white tracking-tighter">Visual Interface</h2>
             </div>
-            <!-- BENTO GRID -->
             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 auto-rows-[200px]" id="visual-grid">
-                <!-- Media injected by JS -->
+                <!-- Content injected by JS -->
             </div>
         </div>
     </section>
@@ -258,8 +258,12 @@
         const modalContainer = document.getElementById('modal-media-container');
         const closeModal = document.getElementById('close-modal');
 
-        function openModal(src) {
-            modalContainer.innerHTML = `<video src="${src}" controls autoplay loop class="w-full h-full object-contain"></video>`;
+        function openModal(item) {
+            if (item.type === 'youtube') {
+                modalContainer.innerHTML = `<iframe class="w-full h-full" src="${item.embedUrl}" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>`;
+            } else {
+                modalContainer.innerHTML = `<video src="${item.src}" controls autoplay loop class="w-full h-full object-contain"></video>`;
+            }
             modal.style.display = 'flex';
             document.body.style.overflow = 'hidden';
         }
@@ -273,12 +277,13 @@
         closeModal.onclick = closeVideoModal;
         modal.onclick = (e) => { if(e.target === modal) closeVideoModal(); };
 
-        const videoFiles = [
-            'https://res.cloudinary.com/bjftepfn/video/upload/v1790202489/video5879560956912082639.mp4',
-            'https://res.cloudinary.com/bjftepfn/video/upload/v1790202494/video5879560956912082640.mp4',
-            'https://res.cloudinary.com/bjftepfn/video/upload/v1790202495/video5879560956912082645.mp4',
-            'https://res.cloudinary.com/bjftepfn/video/upload/v1790202497/video5879560956912082644.mp4',
-            'https://res.cloudinary.com/bjftepfn/video/upload/v1790202502/video5879560956912082642.mp4'
+        // RESTORED CLOUDINARY LINKS + BENTO GRID
+        const mediaItems = [
+            { type: 'local', src: 'https://res.cloudinary.com/bjftepfn/video/upload/v1790202489/video5879560956912082639.mp4' },
+            { type: 'local', src: 'https://res.cloudinary.com/bjftepfn/video/upload/v1790202494/video5879560956912082640.mp4' },
+            { type: 'local', src: 'https://res.cloudinary.com/bjftepfn/video/upload/v1790202495/video5879560956912082645.mp4' },
+            { type: 'local', src: 'https://res.cloudinary.com/bjftepfn/video/upload/v1790202497/video5879560956912082644.mp4' },
+            { type: 'local', src: 'https://res.cloudinary.com/bjftepfn/video/upload/v1790202502/video5879560956912082642.mp4' },
         ];
 
         const layouts = [
@@ -290,19 +295,19 @@
         ];
 
         const grid = document.getElementById('visual-grid');
-        videoFiles.forEach((file, index) => {
+        mediaItems.forEach((item, index) => {
             const layout = layouts[index] || { col: 'md:col-span-1', row: 'md:row-span-1' };
             const div = document.createElement('div');
             div.className = `${layout.col} ${layout.row} group relative overflow-hidden cyber-border bg-black cursor-pointer`;
 
             div.innerHTML = `
-                <video src="${file}" muted loop playsinline class="w-full h-full object-cover opacity-60 group-hover:opacity-100 grayscale group-hover:grayscale-0 transition duration-500" id="vid-${index}"></video>
+                <video src="${item.src}" muted loop playsinline class="w-full h-full object-cover opacity-60 group-hover:opacity-100 grayscale group-hover:grayscale-0 transition duration-500" id="vid-${index}"></video>
                 <div class="absolute top-4 left-4 px-2 py-1 bg-green-500 text-black text-[10px] font-bold uppercase">Stream_${index + 1}.exe</div>
                 <div class="absolute bottom-0 left-0 p-4 w-full bg-gradient-to-t from-black via-black/80 to-transparent">
                     <h3 class="text-sm font-display text-white uppercase tracking-tighter">Visual_Exp_${index + 1}</h3>
                 </div>
             `;
-            div.onclick = () => openModal(file);
+            div.onclick = () => openModal(item);
             grid.appendChild(div);
         });
 
